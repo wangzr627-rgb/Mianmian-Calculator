@@ -45,7 +45,7 @@
     /* Header */
     .header {
       text-align: center;
-      padding: 8px 4px 12px;
+      padding: 6px 4px 10px;
     }
 
     .badge-pill {
@@ -58,22 +58,22 @@
       font-weight: 600;
       padding: 4px 12px;
       border-radius: 999px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .header h1 {
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 800;
       color: var(--text-main);
       letter-spacing: -0.5px;
     }
 
-    /* Top Prominent Result Box (网页顶部最显眼位置) */
+    /* Top Prominent Result Box (置顶且集成开始计算按钮) */
     .result-box-top {
       background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
       color: white;
       border-radius: 20px;
-      padding: 20px;
+      padding: 18px 18px 16px;
       margin-bottom: 14px;
       box-shadow: 0 10px 25px -4px rgba(79, 70, 229, 0.35);
       position: relative;
@@ -104,7 +104,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .result-title {
@@ -114,19 +114,38 @@
       opacity: 0.95;
     }
 
-    .result-tag {
-      background: rgba(255, 255, 255, 0.2);
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
+    /* Top Action Button in Result Box */
+    .btn-top-calc {
+      background: #ffffff;
+      color: #4f46e5;
+      border: none;
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+      touch-action: manipulation;
+    }
+
+    .result-box-top.limit-exceeded .btn-top-calc {
+      color: #dc2626;
+    }
+
+    .btn-top-calc:active {
+      transform: scale(0.94);
+      background: #f1f5f9;
     }
 
     .result-value-row {
       display: flex;
       align-items: baseline;
       gap: 6px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .result-num {
@@ -150,7 +169,7 @@
       font-weight: 700;
       padding: 6px 10px;
       border-radius: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       align-items: center;
       gap: 6px;
       border: 1px solid #f87171;
@@ -164,7 +183,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      padding-top: 12px;
+      padding-top: 10px;
       border-top: 1px solid rgba(255, 255, 255, 0.22);
     }
 
@@ -308,32 +327,6 @@
       font-size: 13.5px;
       font-weight: 600;
       color: var(--text-muted);
-    }
-
-    /* Start Calculate Big Button */
-    .btn-calculate-hero {
-      width: 100%;
-      background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
-      color: white;
-      border: none;
-      border-radius: 14px;
-      padding: 15px;
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
-      margin-top: 14px;
-      transition: all 0.2s ease;
-    }
-
-    .btn-calculate-hero:active {
-      transform: scale(0.98);
-      background: #3730a3;
     }
 
     /* Range Visualizer */
@@ -651,11 +644,13 @@
     <h1>棉棉抽血量计算器</h1>
   </div>
 
-  <!-- 1. TOP PROMINENT RESULT BOX (网页顶部最显眼位置) -->
+  <!-- 1. TOP PROMINENT RESULT BOX (顶部：计算结果与开始计算按钮融为一体) -->
   <div class="result-box-top" id="resultCardTop">
     <div class="result-header-row">
       <div class="result-title" id="resultLabel">💉 建议抽血量 (ml)</div>
-      <div class="result-tag" id="resultModeTag">放血量计算</div>
+      <button class="btn-top-calc" onclick="doCalculateWithNotice()">
+        🚀 开始计算
+      </button>
     </div>
     
     <div class="result-value-row">
@@ -764,13 +759,8 @@
       </div>
     </div>
 
-    <!-- Start Calculate Button (开始计算按钮) -->
-    <button class="btn-calculate-hero" onclick="doCalculateWithNotice()">
-      🚀 开始计算
-    </button>
-
     <div class="formula-badge">
-      💡 <b>最新公式</b>：放血量 (ml) = 体重(kg) × 85 × [ (当前HCT - 目标HCT) ÷ 当前HCT ]<br>
+      💡 <b>换算公式</b>：放血量 (ml) = 体重(kg) × 85 × [ (当前HCT - 目标HCT) ÷ 当前HCT ]<br>
       🛡️ <b>安全阈值</b>：单次放血最高限制为 <b>300 ml</b>。
     </div>
   </div>
@@ -948,7 +938,6 @@
         document.getElementById('targetHctGroup').style.display = 'block';
         document.getElementById('drawVolGroup').style.display = 'none';
         document.getElementById('resultLabel').innerText = '💉 建议抽血量 (ml)';
-        document.getElementById('resultModeTag').innerText = '正向计算';
         document.getElementById('mainResultUnit').innerText = 'ml';
         document.getElementById('subDetailTitle1').innerText = '预计降低幅度';
         document.getElementById('subDetailTitle2').innerText = '建议等量补液';
@@ -956,7 +945,6 @@
         document.getElementById('targetHctGroup').style.display = 'none';
         document.getElementById('drawVolGroup').style.display = 'block';
         document.getElementById('resultLabel').innerText = '📊 预估抽后 HCT (%)';
-        document.getElementById('resultModeTag').innerText = '反向预估';
         document.getElementById('mainResultUnit').innerText = '%';
         document.getElementById('subDetailTitle1').innerText = 'HCT预计降低';
         document.getElementById('subDetailTitle2').innerText = '建议等量补液';
@@ -981,10 +969,15 @@
       if (isOverLimit) {
         showToast('⚠️ 警告：放血量已达到/超过单次上限 300ml！');
       } else {
-        showToast('✅ 计算完成！已更新顶部结果');
+        showToast('✅ 计算完成！结果已更新');
       }
-      // Scroll smoothly to top
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Trigger a subtle pulse animation on the result
+      const numEl = document.getElementById('mainResultNum');
+      numEl.style.transform = 'scale(1.08)';
+      setTimeout(() => {
+        numEl.style.transition = 'transform 0.2s ease';
+        numEl.style.transform = 'scale(1)';
+      }, 150);
     }
 
     function calculate(showExceedAlert) {
@@ -1027,7 +1020,7 @@
         const targetHct = parseFloat(document.getElementById('targetHct').value) || 0;
         const deltaHct = Math.max(0, currentHct - targetHct);
         
-        // New Formula: 放血量 (ml) = 体重 (kg) × 85 × [ (当前HCT - 目标HCT) ÷ 当前HCT ]
+        // Formula: 放血量 (ml) = 体重 (kg) × 85 × [ (当前HCT - 目标HCT) ÷ 当前HCT ]
         const rawDrawVolume = weight * 85 * (deltaHct / currentHct);
         
         if (rawDrawVolume >= MAX_BLOOD_DRAW_LIMIT) {
@@ -1057,8 +1050,6 @@
         }
 
         // Reverse Formula:
-        // x = weight * 85 * ( (currentHct - postHct) / currentHct )
-        // => postHct = currentHct * (1 - x / (weight * 85))
         const totalBlood = weight * 85;
         const ratio = Math.min(planDrawVol / totalBlood, 1);
         const estimatedPostHct = Math.max(0, currentHct * (1 - ratio));

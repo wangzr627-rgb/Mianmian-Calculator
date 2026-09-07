@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#4f46e5">
+  <title>棉棉抽血量计算器 - HCT管理工具</title>
+  
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #eef2ff;
+      --primary-dark: #3730a3;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 16px;
+      --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: env(safe-area-inset-top, 16px) 16px calc(env(safe-area-inset-bottom, 16px) + 24px) 16px;
+      max-width: 500px;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 8px 4px 12px;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+    }
+
+    .header h1 {
+      font-size: 21px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+    }
+
+    /* Top Prominent Result Box (网页顶部最显眼位置) */
+    .result-box-top {
+      background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+      color: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 10px 25px -4px rgba(79, 70, 229, 0.35);
+      position: relative;
+      overflow: hidden;
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.3s ease;
+    }
+
+    .result-box-top.limit-exceeded {
+      background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+      box-shadow: 0 10px 25px -4px rgba(220, 38, 38, 0.4);
+      border-color: #fecaca;
+    }
+
+    .result-box-top::after {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 130px;
+      height: 130px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .result-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .result-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      opacity: 0.95;
+    }
+
+    .result-tag {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .result-value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .result-num {
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -1.5px;
+    }
+
+    .result-unit {
+      font-size: 22px;
+      font-weight: 700;
+      opacity: 0.92;
+    }
+
+    .limit-warning-badge {
+      display: none;
+      background: #fef2f2;
+      color: #b91c1c;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #f87171;
+    }
+
+    .limit-warning-badge.active {
+      display: flex;
+    }
+
+    .result-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.22);
+    }
+
+    .detail-item-title {
+      font-size: 11.5px;
+      opacity: 0.85;
+      margin-bottom: 2px;
+    }
+
+    .detail-item-val {
+      font-size: 14.5px;
+      font-weight: 700;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 9px 0;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Form Inputs */
+    .input-group {
+      margin-bottom: 13px;
+    }
+
+    .input-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .input-label {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .input-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .input-control-wrap {
+      display: flex;
+      align-items: center;
+      background: #f8fafc;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .input-control-wrap:focus-within {
+      border-color: var(--primary);
+      background: #ffffff;
+    }
+
+    .btn-step {
+      width: 44px;
+      height: 46px;
+      background: #f1f5f9;
+      border: none;
+      color: var(--text-main);
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .btn-step:active {
+      background: #e2e8f0;
+    }
+
+    .num-input {
+      flex: 1;
+      height: 46px;
+      border: none;
+      background: transparent;
+      text-align: center;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text-main);
+      outline: none;
+      -moz-appearance: textfield;
+    }
+
+    .num-input::-webkit-outer-spin-button,
+    .num-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .input-unit {
+      padding-right: 14px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Start Calculate Big Button */
+    .btn-calculate-hero {
+      width: 100%;
+      background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+      margin-top: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-calculate-hero:active {
+      transform: scale(0.98);
+      background: #3730a3;
+    }
+
+    /* Range Visualizer */
+    .hct-gauge {
+      margin: 12px 0 6px;
+    }
+
+    .hct-gauge-bar-wrap {
+      height: 12px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      position: relative;
+      margin-bottom: 6px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .gauge-seg-normal {
+      background: #10b981;
+    }
+
+    .gauge-seg-caution {
+      background: #f59e0b;
+    }
+
+    .gauge-seg-danger {
+      background: #ef4444;
+    }
+
+    .gauge-pointer {
+      position: absolute;
+      top: -3px;
+      bottom: -3px;
+      width: 6px;
+      background: #0f172a;
+      border-radius: 4px;
+      transform: translateX(-50%);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .gauge-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .status-badge.normal {
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+    }
+
+    .status-badge.caution {
+      background: #fffbeb;
+      color: #d97706;
+      border: 1px solid #fde68a;
+    }
+
+    .status-badge.danger {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    /* Reference Range Config */
+    .config-card {
+      border: 1.5px dashed #cbd5e1;
+      background: #fafafa;
+    }
+
+    .config-header {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .config-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .config-toggle-arrow {
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+
+    .config-toggle-arrow.open {
+      transform: rotate(180deg);
+    }
+
+    .config-body {
+      display: none;
+      padding-top: 14px;
+      margin-top: 10px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .config-body.open {
+      display: block;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mini-input-wrap {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px 8px;
+    }
+
+    .mini-input {
+      width: 100%;
+      height: 36px;
+      border: none;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      text-align: center;
+      outline: none;
+    }
+
+    .mini-unit {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .btn-reset-config {
+      margin-top: 10px;
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* Clinical Tip */
+    .tip-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #166534;
+      margin-bottom: 14px;
+    }
+
+    .tip-box b {
+      color: #14532d;
+    }
+
+    /* Action Buttons */
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .btn-main {
+      background: #334155;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-main:active {
+      background: #1e293b;
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: var(--text-main);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-secondary:active {
+      background: #f8fafc;
+      transform: scale(0.98);
+    }
+
+    /* History Table */
+    .history-list {
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #f8fafc;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-date {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .history-main-info {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .history-badge {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 18px 0;
+      color: var(--text-muted);
+      font-size: 12.5px;
+    }
+
+    .formula-badge {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+      line-height: 1.45;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(15, 23, 42, 0.92);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 2000;
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+      white-space: nowrap;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="badge-pill">
+      <span>🐱 棉棉健康管理 · 智能放血计算</span>
+    </div>
+    <h1>棉棉抽血量计算器</h1>
+  </div>
+
+  <!-- 1. TOP PROMINENT RESULT BOX (网页顶部最显眼位置) -->
+  <div class="result-box-top" id="resultCardTop">
+    <div class="result-header-row">
+      <div class="result-title" id="resultLabel">💉 建议抽血量 (ml)</div>
+      <div class="result-tag" id="resultModeTag">放血量计算</div>
+    </div>
+    
+    <div class="result-value-row">
+      <span class="result-num" id="mainResultNum">0.0</span>
+      <span class="result-unit" id="mainResultUnit">ml</span>
+    </div>
+
+    <!-- 300ml 上限警告提示条 -->
+    <div class="limit-warning-badge" id="limitWarningBadge">
+      <span>⚠️ <b>警示：</b>抽血量已达到/超过单次安全上限 <b>300ml</b>！建议分次进行或遵医嘱！</span>
+    </div>
+    
+    <div class="result-detail-grid">
+      <div>
+        <div class="detail-item-title" id="subDetailTitle1">预计降低幅度</div>
+        <div class="detail-item-val" id="subDetailVal1">-- 个百分点</div>
+      </div>
+      <div>
+        <div class="detail-item-title" id="subDetailTitle2">建议等量补液</div>
+        <div class="detail-item-val" id="subDetailVal2">-- ml (生理盐水)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mode Selector Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" id="tabForward" onclick="switchMode('forward')">💉 算放血量 (正算)</button>
+    <button class="tab-btn" id="tabReverse" onclick="switchMode('reverse')">📊 预估降后HCT (反算)</button>
+  </div>
+
+  <!-- Main Calculator Card -->
+  <div class="card">
+    <!-- Weight Input -->
+    <div class="input-group">
+      <div class="input-label-row">
+        <span class="input-label">棉棉当前体重</span>
+        <span class="input-hint">KG (公斤)</span>
+      </div>
+      <div class="input-control-wrap">
+        <button class="btn-step" onclick="adjustValue('weight', -0.1)">-</button>
+        <input type="number" id="weight" class="num-input" value="4.5" step="0.1" min="0.5" max="30" oninput="onInputChange()">
+        <span class="input-unit">kg</span>
+        <button class="btn-step" onclick="adjustValue('weight', 0.1)">+</button>
+      </div>
+    </div>
+
+    <!-- Current HCT Input -->
+    <div class="input-group">
+      <div class="input-label-row">
+        <span class="input-label">化验单当前 HCT</span>
+        <span class="input-hint" id="refRangeSummaryHint">参考区间: 39% - 56%</span>
+      </div>
+      <div class="input-control-wrap">
+        <button class="btn-step" onclick="adjustValue('currentHct', -1)">-</button>
+        <input type="number" id="currentHct" class="num-input" value="68" step="0.5" min="10" max="95" oninput="onInputChange()">
+        <span class="input-unit">%</span>
+        <button class="btn-step" onclick="adjustValue('currentHct', 1)">+</button>
+      </div>
+    </div>
+
+    <!-- Mode 1: Target HCT Input (Forward Mode) -->
+    <div class="input-group" id="targetHctGroup">
+      <div class="input-label-row">
+        <span class="input-label">抽后目标 HCT</span>
+        <span class="input-hint" id="targetHctHint">维持在 ≤62% 左右</span>
+      </div>
+      <div class="input-control-wrap">
+        <button class="btn-step" onclick="adjustValue('targetHct', -1)">-</button>
+        <input type="number" id="targetHct" class="num-input" value="60" step="0.5" min="20" max="80" oninput="onInputChange()">
+        <span class="input-unit">%</span>
+        <button class="btn-step" onclick="adjustValue('targetHct', 1)">+</button>
+      </div>
+    </div>
+
+    <!-- Mode 2: Blood Draw Volume Input (Reverse Mode) -->
+    <div class="input-group" id="drawVolGroup" style="display: none;">
+      <div class="input-label-row">
+        <span class="input-label">计划放血量</span>
+        <span class="input-hint">上限限制: 300 ml</span>
+      </div>
+      <div class="input-control-wrap">
+        <button class="btn-step" onclick="adjustValue('planDrawVol', -5)">-</button>
+        <input type="number" id="planDrawVol" class="num-input" value="45" step="1" min="1" max="500" oninput="onInputChange()">
+        <span class="input-unit">ml</span>
+        <button class="btn-step" onclick="adjustValue('planDrawVol', 5)">+</button>
+      </div>
+    </div>
+
+    <!-- HCT Status Visualizer -->
+    <div class="hct-gauge">
+      <div class="hct-gauge-bar-wrap">
+        <div class="gauge-seg-normal" id="gaugeSegNormal" style="width: 56%;" title="正常区间"></div>
+        <div class="gauge-seg-caution" id="gaugeSegCaution" style="width: 12%;" title="维持线区间"></div>
+        <div class="gauge-seg-danger" id="gaugeSegDanger" style="width: 32%;" title="偏高区间"></div>
+        <div class="gauge-pointer" id="gaugePointer" style="left: 68%;"></div>
+      </div>
+      <div class="gauge-labels">
+        <span>0%</span>
+        <span id="gaugeLabelMin">39% (正常下限)</span>
+        <span id="gaugeLabelMax">56% (上限)</span>
+        <span id="gaugeLabelSafe">62% (警戒线)</span>
+        <span>100%</span>
+      </div>
+      <div id="hctStatusBadge" class="status-badge danger">
+        ⚠️ 当前 HCT 68% (高于62%，建议放血)
+      </div>
+    </div>
+
+    <!-- Start Calculate Button (开始计算按钮) -->
+    <button class="btn-calculate-hero" onclick="doCalculateWithNotice()">
+      🚀 开始计算
+    </button>
+
+    <div class="formula-badge">
+      💡 <b>最新公式</b>：放血量 (ml) = 体重(kg) × 85 × [ (当前HCT - 目标HCT) ÷ 当前HCT ]<br>
+      🛡️ <b>安全阈值</b>：单次放血最高限制为 <b>300 ml</b>。
+    </div>
+  </div>
+
+  <!-- 2. 化验单 HCT 参考区间自定义卡片 -->
+  <div class="card config-card">
+    <div class="config-header" onclick="toggleConfig()">
+      <span class="config-title">
+        ⚙️ 自定义化验单参考区间
+      </span>
+      <span class="config-toggle-arrow" id="configArrow">▼</span>
+    </div>
+    
+    <div class="config-body" id="configBody">
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+        不同医院或化验仪器的参考区间略有差异，您可根据当前血常规报告单上的区间数值进行调整：
+      </p>
+      <div class="config-grid">
+        <div>
+          <div class="input-label-row">
+            <span class="input-label" style="font-size:12px;">正常参考下限</span>
+          </div>
+          <div class="mini-input-wrap">
+            <input type="number" id="refMinHct" class="mini-input" value="39" step="1" oninput="onConfigChange()">
+            <span class="mini-unit">%</span>
+          </div>
+        </div>
+        <div>
+          <div class="input-label-row">
+            <span class="input-label" style="font-size:12px;">正常参考上限</span>
+          </div>
+          <div class="mini-input-wrap">
+            <input type="number" id="refMaxHct" class="mini-input" value="56" step="1" oninput="onConfigChange()">
+            <span class="mini-unit">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 10px;">
+        <div class="input-label-row">
+          <span class="input-label" style="font-size:12px;">安全维持警戒上限 (建议值)</span>
+        </div>
+        <div class="mini-input-wrap">
+          <input type="number" id="refSafeMaxHct" class="mini-input" value="62" step="1" oninput="onConfigChange()">
+          <span class="mini-unit">%</span>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+        <button class="btn-reset-config" onclick="resetRefConfig()">恢复默认 (39% - 56%, 警戒62%)</button>
+        <span style="font-size:11px; color:#10b981; font-weight:600;">✓ 自动保存生效</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clinical Tip -->
+  <div class="tip-box">
+    <b>🩺 放血与护理注意事项：</b><br>
+    • <b>单次限额：</b>单次放血量严格限制在 <b>300 ml</b> 以内，超量需分次缓慢抽取。<br>
+    • <b>等量补液：</b>建议按 1:1 等量缓慢补充温热生理盐水 (0.9% NaCl)。<br>
+    • <b>监测循环：</b>放血速度宜平稳缓慢，避免血容量急剧下降引起虚脱或低血压。
+  </div>
+
+  <!-- Action Row -->
+  <div class="action-row">
+    <button class="btn-main" onclick="saveToHistory()">
+      💾 记录此次放血
+    </button>
+    <button class="btn-secondary" onclick="copySummaryText()">
+      📋 复制报告发微信
+    </button>
+  </div>
+
+  <!-- History Record Card -->
+  <div class="card history-card">
+    <div class="card-title">
+      <span>📋 历史记录 (本机自动保存)</span>
+      <button onclick="clearHistory()" style="background:none; border:none; color:var(--text-muted); font-size:12px; cursor:pointer;">清空</button>
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="empty-state">暂无记录，每次抽血后点击上方“记录此次放血”</div>
+    </div>
+  </div>
+
+  <!-- Toast Notice -->
+  <div class="toast" id="toast">已完成计算</div>
+
+  <script>
+    let currentMode = 'forward'; // 'forward' | 'reverse'
+    const MAX_BLOOD_DRAW_LIMIT = 300; // 最高抽血量限制 300ml
+    const STORAGE_KEY = 'mianmian_blood_calc_records_v1';
+    const WEIGHT_KEY = 'mianmian_last_weight';
+    const CONFIG_KEY = 'mianmian_ref_hct_config_v1';
+
+    // Default reference config
+    let refConfig = {
+      min: 39,
+      max: 56,
+      safeMax: 62
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Load custom reference config
+      const savedConfig = localStorage.getItem(CONFIG_KEY);
+      if (savedConfig) {
+        try {
+          refConfig = JSON.parse(savedConfig);
+          document.getElementById('refMinHct').value = refConfig.min;
+          document.getElementById('refMaxHct').value = refConfig.max;
+          document.getElementById('refSafeMaxHct').value = refConfig.safeMax;
+        } catch (e) {}
+      }
+
+      const savedWeight = localStorage.getItem(WEIGHT_KEY);
+      if (savedWeight) {
+        document.getElementById('weight').value = savedWeight;
+      }
+
+      updateConfigDisplay();
+      calculate(false);
+      renderHistory();
+    });
+
+    function toggleConfig() {
+      const body = document.getElementById('configBody');
+      const arrow = document.getElementById('configArrow');
+      const isOpen = body.classList.toggle('open');
+      arrow.classList.toggle('open', isOpen);
+    }
+
+    function onConfigChange() {
+      const min = parseFloat(document.getElementById('refMinHct').value) || 39;
+      const max = parseFloat(document.getElementById('refMaxHct').value) || 56;
+      const safeMax = parseFloat(document.getElementById('refSafeMaxHct').value) || 62;
+
+      refConfig = { min, max, safeMax };
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(refConfig));
+      updateConfigDisplay();
+      calculate(false);
+    }
+
+    function resetRefConfig() {
+      refConfig = { min: 39, max: 56, safeMax: 62 };
+      document.getElementById('refMinHct').value = 39;
+      document.getElementById('refMaxHct').value = 56;
+      document.getElementById('refSafeMaxHct').value = 62;
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(refConfig));
+      updateConfigDisplay();
+      calculate(false);
+      showToast('已恢复默认参考区间 (39%-56%)');
+    }
+
+    function updateConfigDisplay() {
+      document.getElementById('refRangeSummaryHint').innerText = `参考区间: ${refConfig.min}% - ${refConfig.max}%`;
+      document.getElementById('targetHctHint').innerText = `维持在 ≤${refConfig.safeMax}% 左右`;
+      document.getElementById('gaugeLabelMin').innerText = `${refConfig.min}% (下限)`;
+      document.getElementById('gaugeLabelMax').innerText = `${refConfig.max}% (上限)`;
+      document.getElementById('gaugeLabelSafe').innerText = `${refConfig.safeMax}% (警戒线)`;
+
+      const normalWidth = refConfig.max;
+      const cautionWidth = Math.max(0, refConfig.safeMax - refConfig.max);
+      const dangerWidth = Math.max(0, 100 - refConfig.safeMax);
+
+      document.getElementById('gaugeSegNormal').style.width = normalWidth + '%';
+      document.getElementById('gaugeSegCaution').style.width = cautionWidth + '%';
+      document.getElementById('gaugeSegDanger').style.width = dangerWidth + '%';
+    }
+
+    function switchMode(mode) {
+      currentMode = mode;
+      document.getElementById('tabForward').classList.toggle('active', mode === 'forward');
+      document.getElementById('tabReverse').classList.toggle('active', mode === 'reverse');
+      
+      if (mode === 'forward') {
+        document.getElementById('targetHctGroup').style.display = 'block';
+        document.getElementById('drawVolGroup').style.display = 'none';
+        document.getElementById('resultLabel').innerText = '💉 建议抽血量 (ml)';
+        document.getElementById('resultModeTag').innerText = '正向计算';
+        document.getElementById('mainResultUnit').innerText = 'ml';
+        document.getElementById('subDetailTitle1').innerText = '预计降低幅度';
+        document.getElementById('subDetailTitle2').innerText = '建议等量补液';
+      } else {
+        document.getElementById('targetHctGroup').style.display = 'none';
+        document.getElementById('drawVolGroup').style.display = 'block';
+        document.getElementById('resultLabel').innerText = '📊 预估抽后 HCT (%)';
+        document.getElementById('resultModeTag').innerText = '反向预估';
+        document.getElementById('mainResultUnit').innerText = '%';
+        document.getElementById('subDetailTitle1').innerText = 'HCT预计降低';
+        document.getElementById('subDetailTitle2').innerText = '建议等量补液';
+      }
+      calculate(false);
+    }
+
+    function adjustValue(id, delta) {
+      const el = document.getElementById(id);
+      let val = parseFloat(el.value) || 0;
+      val = Math.max(0, val + delta);
+      el.value = (Math.round(val * 10) / 10).toString();
+      onInputChange();
+    }
+
+    function onInputChange() {
+      calculate(false);
+    }
+
+    function doCalculateWithNotice() {
+      const isOverLimit = calculate(true);
+      if (isOverLimit) {
+        showToast('⚠️ 警告：放血量已达到/超过单次上限 300ml！');
+      } else {
+        showToast('✅ 计算完成！已更新顶部结果');
+      }
+      // Scroll smoothly to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function calculate(showExceedAlert) {
+      const weight = parseFloat(document.getElementById('weight').value) || 0;
+      const currentHct = parseFloat(document.getElementById('currentHct').value) || 0;
+
+      if (weight > 0) {
+        localStorage.setItem(WEIGHT_KEY, weight.toString());
+      }
+
+      // Visual indicator
+      const clampedHct = Math.min(Math.max(currentHct, 0), 100);
+      document.getElementById('gaugePointer').style.left = clampedHct + '%';
+
+      const statusBadge = document.getElementById('hctStatusBadge');
+      if (currentHct <= refConfig.max && currentHct >= refConfig.min) {
+        statusBadge.className = 'status-badge normal';
+        statusBadge.innerText = `✅ 当前 HCT ${currentHct}% (处于 ${refConfig.min}-${refConfig.max}% 正常区间)`;
+      } else if (currentHct <= refConfig.safeMax) {
+        statusBadge.className = 'status-badge caution';
+        statusBadge.innerText = `🟡 当前 HCT ${currentHct}% (维持在 ≤${refConfig.safeMax}% 临界安全线内)`;
+      } else {
+        statusBadge.className = 'status-badge danger';
+        statusBadge.innerText = `⚠️ 当前 HCT ${currentHct}% (高于 ${refConfig.safeMax}%，建议适量放血)`;
+      }
+
+      const resultCardTop = document.getElementById('resultCardTop');
+      const limitWarningBadge = document.getElementById('limitWarningBadge');
+
+      if (weight <= 0 || currentHct <= 0) {
+        document.getElementById('mainResultNum').innerText = '0.0';
+        resultCardTop.classList.remove('limit-exceeded');
+        limitWarningBadge.classList.remove('active');
+        return false;
+      }
+
+      let isExceeded = false;
+
+      if (currentMode === 'forward') {
+        const targetHct = parseFloat(document.getElementById('targetHct').value) || 0;
+        const deltaHct = Math.max(0, currentHct - targetHct);
+        
+        // New Formula: 放血量 (ml) = 体重 (kg) × 85 × [ (当前HCT - 目标HCT) ÷ 当前HCT ]
+        const rawDrawVolume = weight * 85 * (deltaHct / currentHct);
+        
+        if (rawDrawVolume >= MAX_BLOOD_DRAW_LIMIT) {
+          isExceeded = true;
+          resultCardTop.classList.add('limit-exceeded');
+          limitWarningBadge.classList.add('active');
+          document.getElementById('mainResultNum').innerText = rawDrawVolume.toFixed(1);
+          document.getElementById('subDetailVal1').innerText = `${deltaHct.toFixed(1)} 个百分点 (降至 ${targetHct}%)`;
+          document.getElementById('subDetailVal2').innerText = `${rawDrawVolume.toFixed(1)} ml (达上限300ml)`;
+        } else {
+          resultCardTop.classList.remove('limit-exceeded');
+          limitWarningBadge.classList.remove('active');
+          document.getElementById('mainResultNum').innerText = rawDrawVolume.toFixed(1);
+          document.getElementById('subDetailVal1').innerText = `${deltaHct.toFixed(1)} 个百分点 (降至 ${targetHct}%)`;
+          document.getElementById('subDetailVal2').innerText = `${rawDrawVolume.toFixed(1)} ml (建议1:1补液)`;
+        }
+      } else {
+        const planDrawVol = parseFloat(document.getElementById('planDrawVol').value) || 0;
+        
+        if (planDrawVol >= MAX_BLOOD_DRAW_LIMIT) {
+          isExceeded = true;
+          resultCardTop.classList.add('limit-exceeded');
+          limitWarningBadge.classList.add('active');
+        } else {
+          resultCardTop.classList.remove('limit-exceeded');
+          limitWarningBadge.classList.remove('active');
+        }
+
+        // Reverse Formula:
+        // x = weight * 85 * ( (currentHct - postHct) / currentHct )
+        // => postHct = currentHct * (1 - x / (weight * 85))
+        const totalBlood = weight * 85;
+        const ratio = Math.min(planDrawVol / totalBlood, 1);
+        const estimatedPostHct = Math.max(0, currentHct * (1 - ratio));
+        const deltaHct = currentHct - estimatedPostHct;
+
+        document.getElementById('mainResultNum').innerText = estimatedPostHct.toFixed(1);
+        document.getElementById('subDetailVal1').innerText = `下降 ${deltaHct.toFixed(1)}% (至 ${estimatedPostHct.toFixed(1)}%)`;
+        document.getElementById('subDetailVal2').innerText = `${planDrawVol.toFixed(1)} ml (建议1:1补液)`;
+      }
+
+      return isExceeded;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2400);
+    }
+
+    function saveToHistory() {
+      const weight = parseFloat(document.getElementById('weight').value) || 0;
+      const currentHct = parseFloat(document.getElementById('currentHct').value) || 0;
+      
+      let drawVol = 0;
+      let targetHct = 0;
+
+      if (currentMode === 'forward') {
+        targetHct = parseFloat(document.getElementById('targetHct').value) || 0;
+        drawVol = weight * 85 * (Math.max(0, currentHct - targetHct) / currentHct);
+      } else {
+        drawVol = parseFloat(document.getElementById('planDrawVol').value) || 0;
+        const totalBlood = weight * 85;
+        const ratio = Math.min(drawVol / totalBlood, 1);
+        targetHct = currentHct * (1 - ratio);
+      }
+
+      if (drawVol <= 0) {
+        showToast('当前无须抽血或输入数值有误');
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = `${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+
+      const isOverLimit = drawVol >= MAX_BLOOD_DRAW_LIMIT;
+
+      const record = {
+        id: Date.now(),
+        time: timeStr,
+        weight: weight,
+        beforeHct: currentHct,
+        targetHct: targetHct.toFixed(1),
+        drawVol: drawVol.toFixed(1),
+        isOverLimit: isOverLimit
+      };
+
+      const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      history.unshift(record);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(0, 50)));
+      renderHistory();
+      showToast('已记录本次放血数据');
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById('historyList');
+      const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+      if (history.length === 0) {
+        historyList.innerHTML = '<div class="empty-state">暂无记录，每次抽血后点击上方“记录此次放血”</div>';
+        return;
+      }
+
+      historyList.innerHTML = history.map(item => `
+        <div class="history-item">
+          <div>
+            <div class="history-date">${item.time} · 体重 ${item.weight}kg</div>
+            <div class="history-main-info">HCT: ${item.beforeHct}% ➔ 目标: ${item.targetHct}%</div>
+          </div>
+          <div class="history-badge" style="${item.isOverLimit ? 'background:#fee2e2; color:#b91c1c;' : ''}">
+            放血: ${item.drawVol} ml ${item.isOverLimit ? '(⚠️达上限)' : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function clearHistory() {
+      if (confirm('确定要清空所有抽血历史记录吗？')) {
+        localStorage.removeItem(STORAGE_KEY);
+        renderHistory();
+        showToast('记录已清空');
+      }
+    }
+
+    function copySummaryText() {
+      const weight = document.getElementById('weight').value;
+      const currentHct = document.getElementById('currentHct').value;
+      const mainResult = document.getElementById('mainResultNum').innerText;
+      const isExceeded = parseFloat(mainResult) >= MAX_BLOOD_DRAW_LIMIT;
+      
+      let text = '';
+      if (currentMode === 'forward') {
+        const targetHct = document.getElementById('targetHct').value;
+        text = `【棉棉放血计算单】\n• 测量时间: ${new Date().toLocaleDateString()}\n• 当前体重: ${weight} kg\n• 化验前HCT: ${currentHct}%\n• 参考区间: ${refConfig.min}% - ${refConfig.max}%\n• 目标降至: ${targetHct}%\n• 计算放血量: ${mainResult} ml ${isExceeded ? '(⚠️已达/超单次上限300ml，建议分次)' : ''}\n• 建议等量补液: ${mainResult} ml (生理盐水)\n• 公式: 体重(kg) × 85 × [(当前HCT - 目标HCT) ÷ 当前HCT]`;
+      } else {
+        const planDrawVol = document.getElementById('planDrawVol').value;
+        text = `【棉棉放血评估单】\n• 测量时间: ${new Date().toLocaleDateString()}\n• 当前体重: ${weight} kg\n• 化验前HCT: ${currentHct}%\n• 参考区间: ${refConfig.min}% - ${refConfig.max}%\n• 计划放血量: ${planDrawVol} ml ${parseFloat(planDrawVol) >= MAX_BLOOD_DRAW_LIMIT ? '(⚠️已达/超单次上限300ml)' : ''}\n• 预计降后HCT: ${mainResult}%\n• 建议等量补液: ${planDrawVol} ml (生理盐水)\n• 公式: 预计HCT = 当前HCT × [1 - 放血量 ÷ (体重 × 85)]`;
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('已复制报告文本，可直接粘贴发微信');
+        }).catch(() => {
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('已复制报告文本，可直接粘贴发微信');
+    }
+  </script>
+</body>
+</html>
